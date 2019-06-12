@@ -2,6 +2,7 @@ from PIL import Image
 import numpy as np
 from numocr import cellocr, resultstr
 import os
+import cv2
 
 
 def shtocr(sess, x, y, keep, path, rows, cols, stroke=10, save=False):
@@ -48,3 +49,11 @@ def singleocr(sess, x, y, keep, path):
             max = v
             most = k
     return most, max
+
+
+def ptrans(orgpath, tarpath, points, tarw=1920, tarh=1080):
+    im = cv2.imread(orgpath, cv2.IMREAD_COLOR)
+    canvasp = np.float32([[0, 0], [tarw, 0], [tarw, tarh], [0, tarh]])
+    pmatrix = cv2.getPerspectiveTransform(points, canvasp)
+    pimg = cv2.warpPerspective(im, pmatrix, (tarw, tarh))
+    cv2.imwrite(tarpath, pimg)
