@@ -5,6 +5,7 @@ import netutil
 from sheetocr import shtocr, singleocr, ptrans
 import numpy as np
 import uuid
+import json
 
 app = Flask(__name__)
 path = r'D:\pic'
@@ -40,14 +41,23 @@ def testpt():
     name = 'pers.jpg'
     newname = 'pers-after.jpg'
     pts = np.float32([[101, 141], [516, 97], [467, 456], [125, 474]])
-    ptrans(os.path.join(path, name), os.path.join(path, newname), pts, tarw=1920, tarh=1080)
+    ptrans(os.path.join(path, name), os.path.join(path, newname), pts)
     return ""
 
 
-@app.route('/ocr')
+@app.route('/ocr', methods=['GET', 'POST'])
 def ocr():
-    # 解析本api的参数们
-    httpargs = request.args
+    splitnarr = None
+    httpargs = None
+
+    if request.method == 'POST':
+        data = request.get_data()
+        httpargs = json.loads(data.decode())
+        splitnarr = httpargs['snumber']
+
+    if request.method == 'GET':
+        httpargs = request.args
+
     opath = httpargs['path']
     pts = np.float32([[httpargs['w1'], httpargs['h1']],
                       [httpargs['w2'], httpargs['h2']],
@@ -58,9 +68,10 @@ def ocr():
     givenstroke = int(httpargs['stroke'])
 
     newpath = os.path.join(path, 'temp', 'temp' + str(uuid.uuid1()) + '.jpg')
-    ptrans(opath, newpath, pts, tarw=800, tarh=700)
+    ptrans(opath, newpath, pts)
 
-    r = shtocr(sess, x, y, keep, newpath, rows=givenrows, cols=givencols, stroke=givenstroke, save=False)
+    r = shtocr(sess, x, y, keep, newpath, splitn=splitnarr,
+               rows=givenrows, cols=givencols, stroke=givenstroke, save=True)
     np.savetxt(opath + '-result.csv', r, delimiter=',', fmt='%s')
     return ""
 

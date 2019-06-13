@@ -7,11 +7,11 @@ def netoutput(images, sess, x, y, keep):
     return np.argmax(result_test, axis=1)
 
 
-def fig2images(im):
+def fig2images(im, n):
     tol = 0.9
 
     # im = Image.open(path)
-    imraw = np.array(im)[:, :, 0]
+    imraw = np.array(im)  # [:, :, 0]
     imsolid = np.where(imraw >= 128, 1, 0)
 
     hnum = imsolid.shape[0]
@@ -29,7 +29,8 @@ def fig2images(im):
             valleys.append(int((vvec_valley[valley_start] + vvec_valley[i - 1]) / 2))
             valley_start = i
 
-    valleys.append(int((vvec_valley[valley_start] + vvec_valley[-1]) / 2))
+    if len(vvec_valley) > 0:
+        valleys.append(int((vvec_valley[valley_start] + vvec_valley[-1]) / 2))
 
     peaks = []
     peak_start = 0
@@ -38,7 +39,8 @@ def fig2images(im):
             peaks.append(int((vvec_peak[peak_start] + vvec_peak[i - 1]) / 2))
             peak_start = i
 
-    peaks.append(int((vvec_peak[peak_start] + vvec_peak[-1]) / 2))
+    if len(vvec_peak) > 0:
+        peaks.append(int((vvec_peak[peak_start] + vvec_peak[-1]) / 2))
 
     peaks.append(vnum)
     valleys = np.array(valleys)
@@ -61,6 +63,12 @@ def fig2images(im):
             splits.append(bestvalley)
         back = front
 
+    # n = 3
+    if n + 1 < len(splits):
+        sortedval_splits = np.argsort(list((map(lambda x: vvec[x], splits))))
+        sortedval_splits = np.where(sortedval_splits < n)[0]
+        splits = list(map(lambda x: splits[x], sortedval_splits))
+
     splitted_im = []
     regsize = 28
 
@@ -69,7 +77,7 @@ def fig2images(im):
         #     continue
         curimg = im.crop((splits[i], 0, splits[i + 1], hnum))
         curimg.thumbnail((100, regsize))
-        arrayed = np.array(curimg)[:, :, 0]
+        arrayed = np.array(curimg)  # [:, :, 0]
         factor = 255 / np.max(arrayed)
         arrayed = 255 - arrayed * factor
         curimg = Image.fromarray(arrayed)
@@ -103,8 +111,8 @@ def fig2images(im):
     return np.array(netimages)
 
 
-def cellocr(im, sess, x, y, keep):
-    ims = fig2images(im)
+def cellocr(im, n, sess, x, y, keep):
+    ims = fig2images(im, n)
     if not ims.any():
         return np.array([])
     return netoutput(ims, sess, x, y, keep)
