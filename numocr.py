@@ -64,10 +64,16 @@ def fig2images(im, n):
         back = front
 
     # n = 3
+    # if n + 1 < len(splits):
+    #     sortedval_splits = np.argsort(list((map(lambda x: vvec[x], splits))))[::1]
+    #     sortedval_splits = np.where(sortedval_splits < n-1)[0]
+    #     splits = list(map(lambda x: splits[x], sortedval_splits))
     if n + 1 < len(splits):
-        sortedval_splits = np.argsort(list((map(lambda x: vvec[x], splits))))
-        sortedval_splits = np.where(sortedval_splits < n)[0]
-        splits = list(map(lambda x: splits[x], sortedval_splits))
+        midarr = splits[1:-1]
+        sortedval_splits = np.argsort(list((map(lambda x: vvec[x], midarr))))[::-1]
+        sortedval_splits = np.where(sortedval_splits < n - 1)[0]
+        midarr = list(map(lambda x: midarr[x], sortedval_splits))
+        splits = [splits[0]] + midarr + [splits[-1]]
 
     splitted_im = []
     regsize = 28

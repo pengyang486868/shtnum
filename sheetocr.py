@@ -8,37 +8,59 @@ splitpath = r'D:\pic\splits'
 resultspath = r'D:\pic\results'
 
 
+def wipeborder(im, wcell, hcell, w, h):
+    imarray = np.array(im)
+    hlinewin = int(wcell * 1.2)
+    vlinewin = int(hcell * 1.2)
+    winrange = 1
+    wipetol = 120
+
+    # old method
+    # # wipe hline
+    # for i in range(cols + 1):
+    #     areamin = i * hcell - stroke
+    #     areamax = i * hcell + stroke
+    #     for indx in range(int(max(0, areamin)), int(min(areamax, h))):
+    #         if (np.mean(imarray[indx, :]) < 150):
+    #             imarray[indx, :] = 255
+    #
+    # # wipe vline
+    # for i in range(rows + 1):
+    #     areamin = i * wcell - stroke
+    #     areamax = i * wcell + stroke
+    #     for indx in range(int(max(0, areamin)), int(min(areamax, w))):
+    #         if (np.mean(imarray[:, indx]) < 150):
+    #             imarray[:, indx] = 255
+
+    for i in range(0, h - winrange):
+        for j in range(0, w - hlinewin):
+            for m in range(winrange):
+                if np.mean(imarray[i + m, j:j + hlinewin]) < wipetol:
+                    imarray[i + m, j:j + hlinewin] = 255
+
+    for i in range(0, h - vlinewin):
+        for j in range(0, w - winrange):
+            for m in range(winrange):
+                if np.mean(imarray[i:i + vlinewin, j + m]) < wipetol:
+                    imarray[i:i + vlinewin, j + m] = 255
+
+    im = Image.fromarray(imarray)
+    return im
+
+
 def shtocr(sess, x, y, keep, path, rows, cols, splitn=None, stroke=10, save=False):
     im = Image.open(path)
     w, h = im.size
     wcell = w / cols
     hcell = h / rows
 
-    imarray = np.array(im)
-    # hlinewin = wcell / 4
-    # vlinewin = hcell / 3
-
-    # wipe hline
-    for i in range(cols + 1):
-        areamin = i * hcell - stroke
-        areamax = i * hcell + stroke
-        for indx in range(int(max(0, areamin)), int(min(areamax, h))):
-            if (np.mean(imarray[indx, :]) < 150):
-                imarray[indx, :] = 255
-
-    # wipe vline
-    for i in range(rows + 1):
-        areamin = i * wcell - stroke
-        areamax = i * wcell + stroke
-        for indx in range(int(max(0, areamin)), int(min(areamax, w))):
-            if (np.mean(imarray[:, indx]) < 150):
-                imarray[:, indx] = 255
-
-    im = Image.fromarray(imarray)
+    # do wipe border and save for check
+    im = wipeborder(im, wcell, hcell, w, h)
     im.save(os.path.join(resultspath, 'wipe.jpg'))
 
     results = []
-    cutborder = 8
+    #cutborder = 8
+    cutborder = stroke
     if splitn is None:
         splitn = np.zeros(rows)
 
