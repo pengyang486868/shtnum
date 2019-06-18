@@ -86,8 +86,43 @@ def fig2images(im, n):
         arrayed = np.array(curimg)  # [:, :, 0]
         factor = 255 / np.max(arrayed)
         arrayed = 255 - arrayed * factor
+
+
+        connect_limit = 100
+        w_curimg = arrayed.shape[0]
+        h_curimg = arrayed.shape[1]
+        for i in range(w_curimg):
+            for j in range(h_curimg):
+                if arrayed[i][j] > connect_limit:
+                    cur_conn = []
+                    cur_conn.append([i, j])
+                    print(i, j)
+                    while True:
+                        flood = False
+                        for posi, posj in cur_conn:
+                            if (posi - 1 > 0) and (not [posi - 1, posj] in cur_conn) \
+                                    and (arrayed[posi - 1][posj] > connect_limit):
+                                cur_conn.append([posi - 1, posj])
+                                flood = True
+                            if (posi + 1 < h_curimg) and (not [posi + 1, posj] in cur_conn) \
+                                    and (arrayed[posi + 1][posj] > connect_limit):
+                                cur_conn.append([posi + 1, posj])
+                                flood = True
+                            if (posj - 1 > 0) and (not [posi, posj - 1] in cur_conn) \
+                                    and (arrayed[posi][posj - 1] > connect_limit):
+                                cur_conn.append([posi, posj - 1])
+                                flood = True
+                            if (posj + 1 < w_curimg) and (not [posi, posj + 1] in cur_conn) \
+                                    and (arrayed[posi][posj + 1] > connect_limit):
+                                cur_conn.append([posi, posj + 1])
+                                flood = True
+                        if not flood:
+                            break
+                    if len(cur_conn) < 50:
+                        for posi, posj in cur_conn:
+                            arrayed[posi][posj] = 0
+
         curimg = Image.fromarray(arrayed)
-        # curimg.show()
 
         # 求重心
         curw = arrayed.shape[1]
